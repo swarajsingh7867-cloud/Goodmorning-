@@ -262,8 +262,10 @@
     </div>
   </div>
 
+  <!-- Cozy Chillhop / Acoustic Morning Lofi Track -->
+  <audio id="bgSong" loop playsinline preload="auto" src="https://assets.mixkit.co/music/preview/mixkit-chill-bro-494.mp3"></audio>
+
   <script>
-    // Quotes list
     const quotes = [
       "\"The sun was hesitating to rise today until it realized you were awake.\"",
       "\"Warning: Looking this cute right after waking up should be illegal.\"",
@@ -272,56 +274,27 @@
       "\"Take on the day gently today. I'm right here cheering for you!\""
     ];
     let currentIndex = 0;
-
-    // Web Audio Synthesizer (Works 100% on iPhone Safari without downloads)
-    let audioCtx = null;
+    const bgAudio = document.getElementById('bgSong');
     let isPlaying = false;
-    let soundInterval = null;
 
-    function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-    }
-
-    function playChime(freq, duration = 0.4) {
-      if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
-    }
-
-    function startMelody() {
-      if (isPlaying) return;
-      initAudio();
-      isPlaying = true;
-      document.getElementById('soundToggle').textContent = "🎵 Music: ON";
-      
-      const notes = [523.25, 659.25, 783.99, 1046.50, 880.00]; // C5, E5, G5, C6, A5
-      let step = 0;
-      soundInterval = setInterval(() => {
-        playChime(notes[step % notes.length], 0.7);
-        step++;
-      }, 900);
+    function playAudioTrack() {
+      if (!bgAudio) return;
+      bgAudio.play().then(() => {
+        isPlaying = true;
+        document.getElementById('soundToggle').textContent = "🎵 Music: Playing";
+      }).catch(err => {
+        console.log("Audio unlock:", err);
+      });
     }
 
     function toggleAudio() {
-      if (!isPlaying) {
-        startMelody();
+      if (!bgAudio) return;
+      if (bgAudio.paused) {
+        playAudioTrack();
       } else {
-        clearInterval(soundInterval);
+        bgAudio.pause();
         isPlaying = false;
-        document.getElementById('soundToggle').textContent = "🎵 Music: OFF";
+        document.getElementById('soundToggle').textContent = "🎵 Music: Paused";
       }
     }
 
@@ -331,15 +304,12 @@
     }
 
     function goToQuotes() {
-      initAudio();
-      if (!isPlaying) startMelody();
+      playAudioTrack();
       switchScreen('screen1', 'screen2');
-      playChime(783.99);
     }
 
     function goToScreen3() {
       switchScreen('screen2', 'screen3');
-      playChime(659.25);
     }
 
     function nextQuote() {
@@ -351,18 +321,22 @@
         document.getElementById('quoteCounter').textContent = `Sweet Note ${currentIndex + 1} of ${quotes.length}`;
         quoteEl.style.opacity = '1';
       }, 150);
-      playChime(880.00, 0.3);
     }
 
     function sendHug() {
       alert("Virtual Hug Delivered! 🤗✨");
-      playChime(1046.50, 0.4);
     }
 
     function sendCoffee() {
       alert("Hot morning coffee sent your way! ☕️💖");
-      playChime(659.25, 0.4);
     }
+
+    // Auto-plays on the first touch anywhere
+    document.addEventListener('touchstart', function () {
+      if (!isPlaying && bgAudio.paused) {
+        playAudioTrack();
+      }
+    }, { once: true });
   </script>
 </body>
 </html>
